@@ -36,6 +36,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CardElevation
+import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -47,6 +48,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -76,28 +80,29 @@ fun PostCardHistory(post: Post, navigateToArticle: (String) -> Unit) {
                 .padding(top = 16.dp, bottom = 16.dp)
         ) {
             Text(post.title, style = MaterialTheme.typography.titleMedium)
-            Row(Modifier.padding(top = 4.dp)) {
-                CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant) {
-                    val textStyle = MaterialTheme.typography.bodyMedium
-                    Text(
-                        text = post.metadata.author.name,
-                        style = textStyle
-                    )
-                    Text(
-                        text = " - ${post.metadata.readTimeMinutes} "+ stringResource(R.string.home_post_min_read2) ,
-                        style = textStyle
-                    )
-                }
-            }
+            val readTimeText = stringResource(R.string.home_post_min_read2)
+
+            Text(
+                text = "${post.metadata.author.name} - ${post.metadata.readTimeMinutes} $readTimeText",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(top = 4.dp)
+            )
         }
         CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant) {
-            Icon(
-                imageVector = Icons.Default.Close,
-                contentDescription = stringResource(R.string.cd_show_fewer),
-                modifier = Modifier
-                    .clickable { openDialog = true }
-                    .size(24.dp)
-            )
+            val baseDescription = stringResource(R.string.cd_show_fewer)
+            val descriptionText = "$baseDescription: ${post.title}"
+            IconButton(
+                onClick = { openDialog = true },
+                modifier = Modifier.semantics {
+                    contentDescription = descriptionText
+                }
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = null
+                )
+            }
         }
     }
     if (openDialog) {
@@ -136,18 +141,20 @@ fun PostCardPopular(
     navigateToArticle: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val readArticleLabel = stringResource(id = R.string.action_read_article)
     Card(
-        colors = CardDefaults.cardColors(),
         shape = MaterialTheme.shapes.medium,
-        modifier = modifier.size(280.dp, 240.dp),
-        onClick = { navigateToArticle(post.id) },
-        elevation = CardDefaults.elevatedCardElevation()
+        modifier = modifier
+            .size(280.dp, 240.dp)
+            .semantics(mergeDescendants = true) {
+                onClick(label = readArticleLabel, action = null)
+            },
+        onClick = { navigateToArticle(post.id) }
     ) {
         Column {
-
             Image(
                 painter = painterResource(post.imageId),
-                contentDescription = null, // decorative
+                contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .height(100.dp)
@@ -161,22 +168,21 @@ fun PostCardPopular(
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
-                Text(
-                    text = post.metadata.author.name,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.bodyMedium
+                
+                val dateMinutes = stringResource(
+                    id = R.string.home_post_min_read,
+                    formatArgs = arrayOf(
+                        post.metadata.date,
+                        post.metadata.readTimeMinutes
+                    )
                 )
-
+                
                 Text(
-                    text = stringResource(
-                        id = R.string.home_post_min_read,
-                        formatArgs = arrayOf(
-                            post.metadata.date,
-                            post.metadata.readTimeMinutes
-                        )
-                    ),
-                    style = MaterialTheme.typography.bodyMedium
+                    // Unificamos autor e metadados para facilitar a leitura e exposição
+                    text = "${post.metadata.author.name} - $dateMinutes",
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }

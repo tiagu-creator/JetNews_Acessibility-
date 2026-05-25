@@ -87,13 +87,13 @@ val JetnewsTypography = Typography(
     bodySmall = TextStyle(
         fontFamily = Montserrat,
         fontWeight = FontWeight.Medium,
-        fontSize = 12.sp,
+        fontSize = 14.sp,
         letterSpacing = 0.4.sp
     ),
     labelSmall = TextStyle(
         fontFamily = Montserrat,
         fontWeight = FontWeight.SemiBold,
-        fontSize = 12.sp,
+        fontSize = 14.sp,
         letterSpacing = 1.sp
     )
 )
